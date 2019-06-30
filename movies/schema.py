@@ -16,6 +16,7 @@ class MovieType(DjangoObjectType):
 
 
 # The query type
+# We must register the Graphql Types defined above
 class Query(ObjectType):
     actor = graphene.Field(ActorType, id=graphene.Int())
     movie = graphene.Field(MovieType, id=graphene.Int())
@@ -23,18 +24,18 @@ class Query(ObjectType):
     movies = graphene.List(MovieType)
 
     def resolve_actor(self, info, **kwargs):
-        id = kwargs.get('id')
+        pk = kwargs.get('id')
 
-        if id is not None:
-            return Actor.objects.get(pk=id)
+        if pk is not None:
+            return Actor.objects.get(pk=pk)
 
         return None
 
     def resolve_movie(self, info, **kwargs):
-        id = kwargs.get('id')
+        pk = kwargs.get('id')
 
-        if id is not None:
-            return Movie.objects.get(pk=id)
+        if pk is not None:
+            return Movie.objects.get(pk=pk)
 
         return None
 
@@ -46,8 +47,7 @@ class Query(ObjectType):
 
 
 # Define Input object for mutations
-# They should be defined baseo on the registered types
-
+# They should be defined based on the registered types
 class ActorInput(graphene.InputObjectType):
     id = graphene.ID()
     name = graphene.String()
@@ -61,6 +61,10 @@ class MovieInput(graphene.InputObjectType):
 
 
 # Defining mutations
+# mutate method must be extended
+# to complete te actions on the DB
+# m2m fields and related
+
 class CreateActor(graphene.Mutation):
     class Arguments:
         actor_data = ActorInput(required=True)
@@ -121,7 +125,7 @@ class CreateMovie(graphene.Mutation):
         movie_instance = Movie(title=movie_data.title, year=movie_data.year)
         movie_instance.save()
         movie_instance.actors.set(actors)
-        return CreateActor(ok=ok, movie=movie_instance)
+        return CreateMovie(ok=ok, movie=movie_instance)
 
 
 class UpdateMovie(graphene.Mutation):
@@ -155,9 +159,10 @@ class UpdateMovie(graphene.Mutation):
             movie_instance.actors.set(actors)
             return UpdateMovie(ok=ok, movie=movie_instance)
 
-        return UpdateActor(ok=ok, movie=None)
+        return UpdateMovie(ok=ok, movie=None)
 
 
+# Mutations must be grouped here as Field
 class Mutation(graphene.ObjectType):
     create_actor = CreateActor.Field()
     update_actor = UpdateActor.Field()

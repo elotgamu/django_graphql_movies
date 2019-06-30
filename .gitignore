@@ -8,6 +8,9 @@
 # Icon must end with two \r
 Icon
 
+#VS CODE
+.vscode
+
 
 # Thumbnails
 ._*
